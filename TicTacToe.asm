@@ -2,6 +2,7 @@ section .data
 board     db '1','2','3','4','5','6','7','8','9', 10
 turn      db 'X'
 newline   db 10
+sepRow    db "-+-+-", 10
 
 xWinMsg   db "X wins!", 10
 oWinMsg   db "O wins!", 10
@@ -27,14 +28,6 @@ _start:
   xor ebx, ebx
   int 0x80
 
-printNewLine:
-  mov eax, 4
-  mov ebx, 1
-  mov ecx, newline
-  mov edx, 1
-  int 0x80
-  ret
-
 gameLoop:
  .loopStart:
    call printBoard
@@ -48,22 +41,32 @@ gameLoop:
    call printBoard
    mov al, [turn]
    cmp al, 'X'
-   lea ecx, [xWinMsg]
-   mov edx, 7
+   je .printXWin
    lea ecx, [oWinMsg]
    mov edx, 7
-   mov eax, 4
-   mov ebx, 1
-   int 0x80
-   ret
-
-printBoard:
+   jmp .printWin
+ .printXWin:
+   lea ecx, [xWinMsg]
+   mov edx, 7
+ .printWin:
   mov eax, 4
   mov ebx, 1
-  mov ecx, board
-  mov edx, 10
   int 0x80
   ret
+
+printBoard:
+  mov ecx, 0
+ .printRow:
+  mov al, [board + ecx]
+  call printChar
+  
+  mov edx, ecx
+  mov eax, edx
+  xor edx, 2
+  cmp eax, 2
+  jle .sep
+  xor edx, edx
+ 
 
 getInput:
  .readKey:
