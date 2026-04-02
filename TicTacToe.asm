@@ -35,19 +35,19 @@ gameLoop:
  .loopStart:
    call printBoard
    call getInput
-   ;call placeMark
-   ;call checkWin
+   call placeMark
+   call checkWin
    jc .winner
    jmp .loopStart
 
  .winner:
-  call printBoard
-  mov eax, 4
-  mov ebx, 1
-  mov ecx, board
-  mov edx, 10
-  int 0x80
-  ret
+   call printBoard
+   mov eax, 4
+   mov ebx, 1
+   mov ecx, board
+   mov edx, 10
+   int 0x80
+   ret
 
 printBoard:
   mov eax, 4
@@ -147,3 +147,14 @@ placeMark:
   jmp .switchTurn
  .incO:
   inc byte [oCount]
+
+ .switchTurn:
+  cmp byte [turn], 'X'
+  jne .setX
+  mov byte [turn], 'O'
+  ret
+ .setX:
+  mov byte [turn], 'X'
+  ret
+
+
