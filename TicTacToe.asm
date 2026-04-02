@@ -73,3 +73,23 @@ getInput:
   cmp al, 8
   jg .readKey
   movzx ebx, al
+
+  ;check if cell is occupied (prevention of move errors)
+  mov al, [board + ebx]
+  cmp al, 'X'
+  je .readKey
+  cmp al, 'O'
+  je. readKey
+
+  ;check if current player's queue is full (all 3 of their pieces on board?) and cell is oldest
+  call loadQueuePtrs
+  cmp cl, 3
+  jl .inputOk
+  mov al, [edi]
+  movzx eax, al
+  cmp bl, al
+  je .readKey
+
+ .inputOk:
+  mov [input], bl
+  ret
