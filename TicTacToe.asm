@@ -127,4 +127,23 @@ placeMark:
   mov byte [edi], 0
  .afterDeq:
   
+ .skipDequeue:
+  mov al, [edi]
+  movzx eax, al
+  mov [esi + eax], bl
+  inc byte [edi]
+  cmp byte [edi], 3
+  jl .afterEnq
+  mov byte [edi], 0
+ .afterEnq:
 
+  cmp cl, 3
+  jl .incCount
+  jmp .switchTurn
+ .incCount:
+  cmp byte [turn], 'X'
+  jne .incO
+  inc byte [xCount]
+  jmp .switchTurn
+ .incO:
+  inc byte [oCount]
