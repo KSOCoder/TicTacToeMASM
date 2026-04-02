@@ -66,7 +66,38 @@ printBoard:
   cmp eax, 2
   jle .sep
   xor edx, edx
- 
+ .sep:
+  cmp edx, 2
+  jne .noSep
+  mov ecx, ecx
+  cmp ecx, 8
+  je .noSep
+  mov eax, '|'
+  call printChar
+ .noSep:
+  inc ecx
+  cmp ecx, 9
+  jl .printRow
+
+  mov ecx, 0
+ .printSepLoop:
+  cmp ecx, 3
+  je .doneBoard
+  mov al, [board + ecx*3]
+  mov edx, ecx
+  inc edx
+  cmp edx, 3
+  jne .skipSep
+  cmp ecx, 2
+  je .skipSep
+  cmp ecx, 5
+  je .skipSep
+  mov eax, 4
+  mov ebx, 1
+  lea ecx, [sepRow]
+  mov edx, 6
+  int 0x80
+   
 
 getInput:
  .readKey:
