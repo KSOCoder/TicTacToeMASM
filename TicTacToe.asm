@@ -7,17 +7,19 @@ sepRow    db "-+-+-", 10
 xWinMsg   db "X wins!", 10
 oWinMsg   db "O wins!", 10
 
-xQueue    db 0FFh,0FFh,0FFh
-oQueue    db 0FFh,0FFh,0FFh
+xQueue    db -1,-1,-1
+oQueue    db -1,-1,-1
 xHead     db 0
 oHead     db 0
 xCount    db 0
 oCount    db 0
 
-lines      db 0,1,2, 3,4,5, 6,7,8, 0,3,6, 1,4,7, 2,5,8, 0,4,8, 2,4,6
+lines     db 0,1,2, 3,4,5, 6,7,8, 0,3,6, 1,4,7, 2,5,8, 0,4,8, 2,4,6
+three     dd 3
 
 section .bss
 input resb 2
+cellIdx resd 1
 
 section .text
 global _start
@@ -33,6 +35,7 @@ gameLoop:
    call printBoard
    call getInput
    call placeMark
+   mov al, [turn]
    call checkWin
    jc .winner
    jmp .loopStart
@@ -55,49 +58,57 @@ gameLoop:
   ret
 
 printBoard:
-  mov ecx, 0
- .printRow:
+  pushad
+  mov dword [cellIdx], 0
+ .printCell:
+  mov ecx, [cellIdx]
   mov al, [board + ecx]
   call printChar
-  
-  mov edx, ecx
-  mov eax, edx
-  xor edx, 2
-  cmp eax, 2
-  jle .sep
-  xor edx, edx
- .sep:
-  cmp edx, 2
-  jne .noSep
-  mov ecx, ecx
-  cmp ecx, 8
-  je .noSep
-  mov eax, '|'
-  call printChar
- .noSep:
-  inc ecx
-  cmp ecx, 9
-  jl .printRow
 
-  mov ecx, 0
- .printSepLoop:
-  cmp ecx, 3
+  mov eax, [cellIdx]
+  inc eax
+  xor edx, edx
+  div dword [three]
+
+  cmp edx, 0
+  jne .printPipe
+
+  mov al, 10
+  call printChar
+
+  mov eax, [cellIdx]
+  cmp eax, 8
   je .doneBoard
-  mov al, [board + ecx*3]
-  mov edx, ecx
-  inc edx
-  cmp edx, 3
-  jne .skipSep
-  cmp ecx, 2
-  je .skipSep
-  cmp ecx, 5
-  je .skipSep
   mov eax, 4
   mov ebx, 1
   lea ecx, [sepRow]
   mov edx, 6
   int 0x80
-   
+  jmp .nextCell
+  
+ .printPipe:
+  mov al, '|'
+  call printChar
+
+ .nextCell:
+  inc dword [cellIdx]
+  mov eax, [cellIdx]
+  cmp eax, 9
+  jl .printCell
+ .doneBoard:
+  popad
+  ret
+
+printChar:
+  pushad
+  mov [esp+28], al
+  mov eax, 4
+  mov ebx, 1
+  lea ecx, [esp+28]
+  mov edx, 1
+  int 0x80
+  popad
+  ret
 
 getInput:
  .readKey:
@@ -127,8 +138,8 @@ getInput:
   call loadQueuePtrs
   cmp cl, 3
   jl .inputOk
-  mov al, [edi]
-  movzx eax, al
+  movzx eax, byte [edi]
+  mov al, [esi + eax]
   cmp bl, al
   je .readKey
 
@@ -150,6 +161,7 @@ loadQueuePtrs:
   ret
 
 placeMark:
+  pushad
   movzx ebx, byte [input]
   mov al, [turn]
   mov [board + ebx], al
@@ -158,63 +170,79 @@ placeMark:
 
   cmp cl, 3
   jl .skipDequeue
-  mov al, [edi]
-  movzx eax, al
-  mov al, [esi + eax]
-  add al, '1'
-  mov [board + eax], al
+  movzx eax, byte [edi]
+  movzx eax, byte [esi + eax]
+  mov edx, eax
+  add dl, '1'
+  mov [board + eax], dl
   inc byte [edi]
   cmp byte [edi], 3
-  jl .afterDeq
+  jl .skipDequeue
   mov byte [edi], 0
- .afterDeq:
   
  .skipDequeue:
-  mov al, [edi]
-  movzx eax, al
-  mov [esi + eax], bl
-  inc byte [edi]
-  cmp byte [edi], 3
-  jl .afterEnq
-  mov byte [edi], 0
- .afterEnq:
+  movzx eax, byte [edi]
+  movzx edx, cl
+  cmp cl, 3
+  jl .computeTail
+  xor edx, edx
+ .computeTail:
+  add eax, edx
+  xor edx, edx
+  div dword [three]
+  mov [esi + edx], bl
 
   cmp cl, 3
-  jl .incCount
-  jmp .switchTurn
- .incCount:
+  jge .switchTurn
   cmp byte [turn], 'X'
   jne .incO
   inc byte [xCount]
   jmp .switchTurn
  .incO:
   inc byte [oCount]
-
+ 
  .switchTurn:
   cmp byte [turn], 'X'
   jne .setX
   mov byte [turn], 'O'
-  ret
+  jmp .done
  .setX:
   mov byte [turn], 'X'
+ .done:
+  popad
   ret
 
 checkWin:
-  mov al, [turn]
+  push esi
+  push ecx
+  push ebx
   lea esi, [lines]
   mov ecx, 8
+  mov al, [turn]
  .checkLines:
-  mov bl, [board + esi + 0]
+  mov bl, [esi + 0]
+  mov bh, [esi + 1]
+  mov dl, [esi + 2]
+
+  mov bl, [board + ebx]
   cmp bl, al
   jne .nextLine
-  cmp [board + esi + 1], al
+  mov bh, [board + ebx]
+  cmp bh, al
   jne .nextLine
-  cmp [board + esi + 2], al
+  mov dl, [board + ebx]
+  cmp dl, al
   jne .nextLine
   stc
+  pop ebx
+  pop ecx
+  pop esi
   ret
  .nextLine:
   add esi, 3
   loop .checkLines
   clc
+  pop ebx
+  pop ecx
+  pop esi
   ret
