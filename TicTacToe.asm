@@ -6,6 +6,8 @@ sepRow    db "-+-+-", 10
 
 xWinMsg   db "X wins!", 10
 oWinMsg   db "O wins!", 10
+xTurnMsg  db "X's turn", 10
+oTurnMsg  db "O's turn", 10
 
 xQueue    db -1,-1,-1
 oQueue    db -1,-1,-1
@@ -33,12 +35,28 @@ _start:
 gameLoop:
  .loopStart:
    call printBoard
-   call getInput
-   call placeMark
    mov al, [turn]
-   call checkWin
-   jc .winner
-   jmp .loopStart
+   cmp al, 'X'
+   je .printXTurn
+   lea ecx, [oTurnMsg]
+   mov edx, 9
+   jmp .printTurn
+  
+ .printXTurn:
+  lea ecx, [xTurnMsg]
+  mov edx, 9
+
+ .printTurn:
+  mov eax, 4
+  mov ebx, 1
+  int 0x80
+
+  call getInput
+  call placeMark
+  mov al, [turn]
+  call checkWin
+  jc .winner
+  jmp .loopStart
 
  .winner:
    call printBoard
@@ -215,7 +233,10 @@ placeMark:
 checkWin:
   push esi
   push ecx
+  push eax
   push ebx
+  push edx
+
   lea esi, [lines]
   mov ecx, 8
   mov al, [turn]
@@ -224,17 +245,23 @@ checkWin:
   mov bh, [esi + 1]
   mov dl, [esi + 2]
 
+  movzx ebx, bl
+  movzx edx, bh
+  movzx edi, dl
+
   mov bl, [board + ebx]
   cmp bl, al
   jne .nextLine
-  mov bh, [board + ebx]
+  mov bh, [board + edx]
   cmp bh, al
   jne .nextLine
-  mov dl, [board + ebx]
+  mov dl, [board + edi]
   cmp dl, al
   jne .nextLine
   stc
+  pop edx
   pop ebx
+  pop eax
   pop ecx
   pop esi
   ret
@@ -242,7 +269,9 @@ checkWin:
   add esi, 3
   loop .checkLines
   clc
+  pop edx
   pop ebx
+  pop eax
   pop ecx
   pop esi
   ret
