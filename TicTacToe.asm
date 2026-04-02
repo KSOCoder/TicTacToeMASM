@@ -87,7 +87,7 @@ getInput:
   cmp al, 'X'
   je .readKey
   cmp al, 'O'
-  je. readKey
+  je .readKey
 
   ;check if current player's queue is full (all 3 of their pieces on board?) and cell is oldest
   call loadQueuePtrs
@@ -170,12 +170,12 @@ checkWin:
   lea esi, [lines]
   mov ecx, 8
  .checkLines:
-  mov bl, [board + esi[0]]
+  mov bl, [board + esi + 0]
   cmp bl, al
   jne .nextLine
-  cmp [board + esi[1]], al
+  cmp [board + esi + 1], al
   jne .nextLine
-  cmp [board + esi[2]], al
+  cmp [board + esi + 2], al
   jne .nextLine
   stc
   ret
