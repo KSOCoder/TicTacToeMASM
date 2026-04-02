@@ -56,3 +56,20 @@ printBoard:
   mov edx, 10
   int 0x80
   ret
+
+getInput:
+ .readKey:
+  mov eax, 3
+  mov ebx, 0
+  mov ecx, input
+  mov edx, 2
+  int 0x80
+
+  ;convert '1' - '9' to 0-8 (board positions)
+  movzx eax, byte [input]
+  sub al, '1'
+  cmp al, 0
+  jl .readKey
+  cmp al, 8
+  jg .readKey
+  movzx ebx, al
