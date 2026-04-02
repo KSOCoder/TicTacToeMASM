@@ -33,9 +33,26 @@ printNewLine:
 
 gameLoop:
  .loopStart:
-   ;call printBoard
+   call printBoard
    ;call getInput
    ;call placeMark
    ;call checkWin
-   ;jc .winner
+   jc .winner
    ;jmp .loopStart
+
+ .winner:
+  call printBoard
+  mov eax, 4
+  mov ebx, 1
+  mov ecx, board
+  mov edx, 10
+  int 0x80
+  ret
+
+printBoard:
+  mov eax, 4
+  mov ebx, 1
+  mov ecx, board
+  mov edx, 10
+  int 0x80
+  ret
