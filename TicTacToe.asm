@@ -157,4 +157,33 @@ placeMark:
   mov byte [turn], 'X'
   ret
 
+checkWin:
+  mov al, [turn]
+  call checkLines
+  jc .win
+  ret
+ .win:
+  stc
+  ret
 
+checkLines:
+  push esi
+  lea esi, [rows]
+  mov ecx, 3
+ .checkRows:
+  mov bl, [board + esi[0]]
+  cmp bl, al
+  jne .nextRow
+  cmp [board + esi[1]], al
+  jne .nextRow
+  cmp [board + esi[2]], al
+  jne .nextRow
+  stc
+  pop esi
+  ret
+ .nextRow:
+  add esi, 3
+  loop .checkRows
+  clc
+  pop esi
+  ret
