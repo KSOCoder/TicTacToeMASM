@@ -159,31 +159,20 @@ placeMark:
 
 checkWin:
   mov al, [turn]
-  call checkLines
-  jc .win
-  ret
- .win:
-  stc
-  ret
-
-checkLines:
-  push esi
-  lea esi, [rows]
-  mov ecx, 3
- .checkRows:
+  lea esi, [lines]
+  mov ecx, 8
+ .checkLines:
   mov bl, [board + esi[0]]
   cmp bl, al
-  jne .nextRow
+  jne .nextLine
   cmp [board + esi[1]], al
-  jne .nextRow
+  jne .nextLine
   cmp [board + esi[2]], al
-  jne .nextRow
+  jne .nextLine
   stc
-  pop esi
   ret
- .nextRow:
+ .nextLine:
   add esi, 3
-  loop .checkRows
+  loop .checkLines
   clc
-  pop esi
   ret
