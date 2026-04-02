@@ -106,3 +106,25 @@ loadQueuePtrs:
   lea edi, [oHead]
   mov cl, [oCount]
   ret
+
+placeMark:
+  movzx ebx, byte [input]
+  mov al, [turn]
+  mov [board + ebx], al
+  
+  call loadQueuePtrs
+
+  cmp cl, 3
+  jl .skipDequeue
+  mov al, [edi]
+  movzx eax, al
+  mov al, [esi + eax]
+  add al, '1'
+  mov [board + eax], al
+  inc byte [edi]
+  cmp byte [edi], 3
+  jl .afterDeq
+  mov byte [edi], 0
+ .afterDeq:
+  
+
