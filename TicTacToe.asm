@@ -34,11 +34,11 @@ printNewLine:
 gameLoop:
  .loopStart:
    call printBoard
-   ;call getInput
+   call getInput
    ;call placeMark
    ;call checkWin
    jc .winner
-   ;jmp .loopStart
+   jmp .loopStart
 
  .winner:
   call printBoard
@@ -92,4 +92,17 @@ getInput:
 
  .inputOk:
   mov [input], bl
+  ret
+
+loadQueuePtrs:
+  cmp byte [turn], 'X'
+  jne .useO
+  lea esi, [xQueue]
+  lea edi, [xHead]
+  mov cl, [xCount]
+  ret
+ .useO:
+  lea esi, [oQueue]
+  lea edi, [oHead]
+  mov cl, [oCount]
   ret
